@@ -20,6 +20,6 @@ public class Transaction implements Serializable{
     }
 
     public String display() {
-        return String.format(" transactionID : %s \n FromaccountNumber : %s\n ToAccountNumber : %s\n  amount : %f \n date : %s ", transactionID,FromaccountNumber,ToaccountNumber,amount,date);
+        return String.format(" Transaction ID : %s \n From account number : %s\n To account number : %s\n amount : %f \n date : %s \n", transactionID,FromaccountNumber,ToaccountNumber,amount,date);
     }
 }

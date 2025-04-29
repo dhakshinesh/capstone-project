@@ -178,7 +178,13 @@ public class BankGUI {
         });
 
         createTransactionButton.addActionListener(e -> {
-            String fromAccountNumber = JOptionPane.showInputDialog("Enter From Account Number:");
+            JComboBox<String> fromAccountDropdown = new JComboBox<>();
+            for (BankAccount account : CustomerManager.fetch_bankAccounts(customer)) {
+                fromAccountDropdown.addItem(account.accountNumber);
+            }
+
+            int result = JOptionPane.showConfirmDialog(panel, fromAccountDropdown, "Select From Account", JOptionPane.OK_CANCEL_OPTION);
+            String fromAccountNumber = (String) fromAccountDropdown.getSelectedItem();
             String toAccountNumber = JOptionPane.showInputDialog("Enter To Account Number:");
             String amountStr = JOptionPane.showInputDialog("Enter Amount:");
             String pin = JOptionPane.showInputDialog("Enter PIN:");
@@ -262,12 +268,14 @@ public class BankGUI {
         JButton addAccountButton = new JButton("Add Account");
         JButton viewCustomersButton = new JButton("View Customers");
         JButton viewTransactionsButton = new JButton("View Transactions");
+        JButton backupDataButton = new JButton("Backup Data");
         JButton logoutButton = new JButton("Logout");
 
         buttonPanel.add(addCustomerButton);
         buttonPanel.add(addAccountButton);
         buttonPanel.add(viewCustomersButton);
         buttonPanel.add(viewTransactionsButton);
+        buttonPanel.add(backupDataButton);
         buttonPanel.add(logoutButton);
         panel.add(buttonPanel, BorderLayout.SOUTH);
 
@@ -318,6 +326,15 @@ public class BankGUI {
             ArrayList<Transaction> transactions = customerManager.displayAlltransactions();
             for (Transaction transaction : transactions) {
                 appendText(displayPane, transaction.display() + "\n", Color.BLACK, false);
+            }
+        });
+
+        backupDataButton.addActionListener(e -> {
+            boolean success = customerManager.backupDataToDatabase();
+            if (success) {
+                JOptionPane.showMessageDialog(panel, "Data backed up successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(panel, "Failed to back up data.", "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
 

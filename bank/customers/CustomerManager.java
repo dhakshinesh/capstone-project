@@ -1,6 +1,10 @@
 package bank.customers;
+import bank.DatabaseConnection;
 import bank.Data.file_handler;
 import java.util.ArrayList;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.time.LocalDate;
 
 public class CustomerManager {
@@ -28,8 +32,88 @@ public class CustomerManager {
                 }
             }
         }
+        
     }
     
+    //database setup
+public boolean backupDataToDatabase() {
+    String timestamp = String.valueOf(System.currentTimeMillis()); // Use current timestamp for table names
+    String customersTable = "customers_backup_" + timestamp;
+    String accountsTable = "accounts_backup_" + timestamp;
+    String transactionsTable = "transactions_backup_" + timestamp;
+
+    try (Connection connection = DatabaseConnection.getConnection()) {
+        // Create customers backup table
+        String createCustomersTable = "CREATE TABLE " + customersTable + " AS SELECT * FROM customers WHERE 1=0";
+        connection.createStatement().execute(createCustomersTable);
+
+        // Create accounts backup table
+        String createAccountsTable = "CREATE TABLE " + accountsTable + " AS SELECT * FROM accounts WHERE 1=0";
+        connection.createStatement().execute(createAccountsTable);
+
+        // Create transactions backup table
+        String createTransactionsTable = "CREATE TABLE " + transactionsTable + " AS SELECT * FROM transactions WHERE 1=0";
+        connection.createStatement().execute(createTransactionsTable);
+
+        // Insert data into customers backup table
+        String insertCustomers = "INSERT INTO " + customersTable + " (customer_id, name, email, phone, address, password) VALUES (?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement customerStmt = connection.prepareStatement(insertCustomers)) {
+            for (Customer customer : customers) {
+                if (customer.name == null || customer.email == null || customer.phone == null || customer.get_password() == null) {
+                    System.err.println("Skipping customer with invalid data: " + customer.customerID);
+                    continue; // Skip this customer
+                }
+                customerStmt.setString(1, customer.customerID);
+                customerStmt.setString(2, customer.name);
+                customerStmt.setString(3, customer.email);
+                customerStmt.setString(4, customer.phone);
+                customerStmt.setString(5, customer.address != null ? customer.address : "N/A");
+                customerStmt.setString(6, customer.get_password());
+                customerStmt.addBatch();
+            }
+            customerStmt.executeBatch();
+        }
+
+        // Insert data into accounts backup table
+        String insertAccounts = "INSERT INTO " + accountsTable + " (account_id, customer_id, account_number, balance, account_type, password) VALUES (?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement accountStmt = connection.prepareStatement(insertAccounts)) {
+            for (BankAccount account : accounts) {
+                accountStmt.setString(1, account.accountNumber);
+                accountStmt.setString(2, account.bnkCustomer.customerID);
+                accountStmt.setString(3, account.accountNumber);
+                accountStmt.setDouble(4, account.balance);
+                accountStmt.setString(5, account.accountType);
+                accountStmt.setString(6, account.get_password());
+                accountStmt.addBatch();
+            }
+            accountStmt.executeBatch();
+        }
+
+        // Insert data into transactions backup table
+        String insertTransactions = "INSERT INTO " + transactionsTable + " (transaction_id, from_account, to_account, amount, date) VALUES (?, ?, ?, ?, ?)";
+        try (PreparedStatement transactionStmt = connection.prepareStatement(insertTransactions)) {
+            for (Transaction transaction : transactions) {
+                transactionStmt.setString(1, transaction.transactionID);
+                transactionStmt.setString(2, transaction.FromaccountNumber);
+                transactionStmt.setString(3, transaction.ToaccountNumber);
+                transactionStmt.setDouble(4, transaction.amount);
+                transactionStmt.setString(5, transaction.date);
+                transactionStmt.addBatch();
+            }
+            transactionStmt.executeBatch();
+        }
+
+        System.out.println("Backup completed successfully!");
+        return true;
+    } catch (SQLException e) {
+        System.err.println("Failed to back up data.");
+        e.printStackTrace();
+        return false;
+    }
+}
+
+
+
     // Add a new customer
     public String addCustomer(String name, String email, String phone, String address, String password) {
         //Generate Customer ids 

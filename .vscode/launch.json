@@ -6,6 +6,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "BankGUI",
+            "request": "launch",
+            "mainClass": "bank.BankGUI",
+            "projectName": "capstone project_b86a95e9"
+        },
+        {
+            "type": "java",
             "name": "Bank",
             "request": "launch",
             "mainClass": "bank.Bank",

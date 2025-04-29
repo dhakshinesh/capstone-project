@@ -2,5 +2,7 @@
     "java.project.sourcePaths": [
         "."
     ],
-    "java.project.referencedLibraries": []
+    "java.project.referencedLibraries": [
+        "lib\\mysql-connector-j-9.3.0.jar"
+    ]
 }
